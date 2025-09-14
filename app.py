@@ -2,6 +2,7 @@
 import sys
 import os
 from flask import Flask, render_template, request
+from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 
 # Ensure src folder is in path
@@ -12,12 +13,14 @@ from src.fetch_with_gmailapi import fetch_and_save_emails
 
 app = Flask(__name__)
 
+# ---- Scheduler to fetch emails automatically ----
+scheduler = BackgroundScheduler()
+scheduler.add_job(lambda: fetch_and_save_emails(max_messages=5), 'interval', minutes=1)
+scheduler.start()
+
 # ---- Dashboard route ----
 @app.route("/")
 def dashboard():
-    # Always fetch new emails on page load
-    fetch_and_save_emails(max_messages=20)
-
     # Get filter parameters from query string
     selected_tag = request.args.get("tag", "All")
     start_date_str = request.args.get("start_date")
@@ -61,3 +64,4 @@ def dashboard():
 # ---- Run Flask app ----
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
