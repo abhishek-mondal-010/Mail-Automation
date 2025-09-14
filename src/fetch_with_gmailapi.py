@@ -1,8 +1,9 @@
-
 import os
 import base64
 from email.header import decode_header
 from datetime import datetime
+import json
+
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -13,8 +14,7 @@ from src.tagger import tag_email
 
 # ---- Config ----
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
-CREDENTIALS_FILE = os.path.join(os.getcwd(), "credentials.json")
-TOKEN_FILE = os.path.join(os.getcwd(), "token.json")
+TOKEN_FILE = os.path.join(os.getcwd(), "token.json")  # optional, can keep for refresh
 MAX_MESSAGES_DEFAULT = 10  # fetch last 10 messages
 
 # ---- Helpers ----
@@ -48,16 +48,34 @@ def get_plain_text_from_payload(payload):
 # ---- Gmail auth ----
 def get_gmail_service():
     creds = None
+
+    # Load token if it exists
     if os.path.exists(TOKEN_FILE):
         creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+
+    # If no token or invalid, create one using credentials from environment
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
-            creds = flow.run_local_server(port=0)
+            # Load Gmail credentials from environment variable
+            creds_json_str = os.environ.get("GMAIL_CREDENTIALS")
+            if not creds_json_str:
+                raise Exception("GMAIL_CREDENTIALS environment variable not set!")
+            creds_dict = json.loads(creds_json_str)
+            
+            # Create flow
+            flow = InstalledAppFlow.from_client_config(
+                creds_dict,
+                SCOPES
+            )
+            # For headless environments (Render), use `run_console()` instead of `run_local_server()`
+            creds = flow.run_console()
+        
+        # Save token for future use
         with open(TOKEN_FILE, "w") as f:
             f.write(creds.to_json())
+
     service = build("gmail", "v1", credentials=creds)
     return service
 
@@ -91,7 +109,7 @@ def fetch_and_save_emails(max_messages=MAX_MESSAGES_DEFAULT):
         except Exception:
             date_obj = datetime.utcnow()
 
-        #  email to prevent duplicates
+        # Save email to MongoDB and prevent duplicates
         emails_collection.update_one(
             {"gmail_id": m["id"]},
             {"$setOnInsert": {
