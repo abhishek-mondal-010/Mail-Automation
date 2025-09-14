@@ -15,13 +15,13 @@ app = Flask(__name__)
 
 # ---- Scheduler to fetch emails automatically ----
 scheduler = BackgroundScheduler()
-scheduler.add_job(lambda: fetch_and_save_emails(max_messages=5), 'interval', minutes=1)
+scheduler.add_job(lambda: fetch_and_save_emails(max_messages=10), 'interval', minutes=5)
 scheduler.start()
+
 
 # ---- Dashboard route ----
 @app.route("/")
 def dashboard():
-    # Get filter parameters from query string
     selected_tag = request.args.get("tag", "All")
     start_date_str = request.args.get("start_date")
     end_date_str = request.args.get("end_date")
@@ -41,7 +41,7 @@ def dashboard():
         except ValueError:
             pass  # Ignore invalid date formats
 
-    # Fetch emails from MongoDB
+    # Fetch emails from MongoDB (only read, no fetching)
     emails = list(emails_collection.find(query).sort("date", -1))
     total = len(emails)
 
@@ -61,7 +61,7 @@ def dashboard():
         end_date=end_date_str
     )
 
+
 # ---- Run Flask app ----
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-
