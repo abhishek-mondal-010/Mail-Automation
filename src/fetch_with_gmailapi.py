@@ -1,4 +1,4 @@
-# src/fetch_with_gmailapi.py
+
 import os
 import base64
 from email.header import decode_header
@@ -91,7 +91,7 @@ def fetch_and_save_emails(max_messages=MAX_MESSAGES_DEFAULT):
         except Exception:
             date_obj = datetime.utcnow()
 
-        # Upsert email to prevent duplicates
+        #  email to prevent duplicates
         emails_collection.update_one(
             {"gmail_id": m["id"]},
             {"$setOnInsert": {

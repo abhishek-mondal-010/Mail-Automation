@@ -1,4 +1,4 @@
-# src/emailprocessor.py
+
 from src.mongo_db import emails_collection
 from src.tagger import tag_email
 from datetime import datetime
