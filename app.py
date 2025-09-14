@@ -63,7 +63,5 @@ def dashboard():
 
 # ---- Run Flask app ----
 if __name__ == "__main__":
-    try:
-        app.run(debug=True, use_reloader=False)  # use_reloader=False prevents double scheduler start
-    except (KeyboardInterrupt, SystemExit):
-        scheduler.shutdown()
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
