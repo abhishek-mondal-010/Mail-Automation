@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Gmail Config
-EMAIL_USER = os.getenv("EMAIL_USER")      # Your Gmail address
-EMAIL_PASS = os.getenv("EMAIL_PASS")      # Your App Password
+EMAIL_USER = os.getenv("EMAIL_USER")      
+EMAIL_PASS = os.getenv("EMAIL_PASS")      
 
 # Database Config
 DB_NAME = "emails.db"
