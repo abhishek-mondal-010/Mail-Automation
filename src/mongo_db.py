@@ -1,4 +1,4 @@
-# src/mongo_db.py
+# mongoDB connection and fetching 
 import os
 from pymongo import MongoClient, errors
 from dotenv import load_dotenv
